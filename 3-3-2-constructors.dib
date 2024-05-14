@@ -1,0 +1,35 @@
+#!meta
+
+{"kernelInfo":{"defaultKernelName":"csharp","items":[{"aliases":[],"languageName":"csharp","name":"csharp"}]}}
+
+#!csharp
+
+public class Ex1
+{
+    // field initializers are not allowed to invoke the object’s own nonstatic methods...
+    private int _id = GetId();
+
+    public int GetId() => 1;
+
+    public Ex1()
+    {
+        // ... but constructors are
+        _id = GetId();
+    }
+}
+
+#!markdown
+
+At runtime, a type’s static fields will first be set to 0 (or equivalent values). Next, the field initializers run in the order in which they are written in the source file.
+
+#!csharp
+
+public class Ex2
+{
+    public static int a = b + 1;
+    public static int b = 41;
+    public static int c = b + 1;
+}
+
+Console.WriteLine(Ex2.a);
+Console.WriteLine(Ex2.c);

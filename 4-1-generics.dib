@@ -1,0 +1,192 @@
+#!meta
+
+{"kernelInfo":{"defaultKernelName":"csharp","items":[{"aliases":[],"languageName":"csharp","name":"csharp"}]}}
+
+#!csharp
+
+// Example 4-1. Defining a generic class
+
+public class NamedContainer<T>
+{
+    public NamedContainer(T item, string name)
+    {
+        Item = item;
+        Name = name;
+    }
+    
+    public T Item { get; }
+    public string Name { get; }
+}
+
+#!markdown
+
+The class that Example 4-1 defines is, like any generic type, not a complete type. A generic type declaration is unbound, meaning that there are type parameters that must be filled in to produce a complete type. Basic questions, such as how much memory a NamedContainer<T> instance will require, cannot be answered without knowing what T is—the hidden field for the Item property would need 4 bytes if T
+were an int, but 16 bytes if it were a decimal.
+
+The CLR cannot produce executable code for a type if it does not know how the contents will be arranged in memory. So to use this, or any other generic type, we must provide type arguments. Example 4-2 shows how. When type arguments are supplied, the result is sometimes called a constructed type.
+
+#!csharp
+
+// Example 4-2. Using a generic class
+
+var a = new NamedContainer<int>(42, "The answer");
+var b = new NamedContainer<int>(99, "Number of red balloons");
+var c = new NamedContainer<string>("Programming C#", "Book title");
+
+var namedInts = new List<NamedContainer<int>>() { a, b };
+var namedNamedItem = new NamedContainer<NamedContainer<int>>(a, "Wrapped");
+
+#!markdown
+
+The number of type parameters forms part of an unbound generic type’s identity.
+This makes it possible to introduce multiple types with the same name as long as they have different numbers of type parameters. (The technical term for number of type parameters is arity.)
+
+#!markdown
+
+# Constraints
+
+C# allows you to state that a type argument must fulfill certain requirements. For example, suppose you want to be able to create new instances of the type on demand.
+
+#!csharp
+
+// Example 4-4 For illustration only. Consider using Lazy<T> in a real program.
+
+public static class Deferred<T>
+    where T : new()
+{
+    private static T _instance;
+
+    public static T Instance
+    {
+        get
+        {
+            if (_instance == null)
+            {
+                _instance = new T();
+            }
+
+            return _instance;
+        }
+    }
+}
+
+public class Foo {}
+
+var foo = Deferred<int>.Instance;
+
+#!markdown
+
+For this class to do its job, it needs to be able to construct an instance of whatever type is supplied as the argument for T. The get accessor uses the new keyword, and since it passes no arguments, it clearly requires T to provide a parameterless constructor. But not all types do, so what happens if we try to use a type without a suitable constructor as the argument for Deferred<T>? The compiler will reject it, because it violates a constraint that this generic type has declared for T.
+
+Constraints appear just before the class’s opening brace, and they begin with the where keyword. The new() constraint in Example 4-4 states that T is required to supply a zero-argument constructor.
+
+If that constraint had not been present, the class in Example 4-4 would not compile — you would get an error on the line that attempts to construct a new T.
+
+#!markdown
+
+In fact, C# supports only six kinds of constraints on a type argument:
+- a type constraint,
+- a reference type constraint,
+- a value type constraint,
+- notnull,
+- unmanaged,
+- the new() constraint.
+
+We just saw that last one, so let’s look at the rest.
+
+#!markdown
+
+# Type Constraints
+
+You can constrain the argument for a type parameter to be compatible with a particular type. For example, you could use this to demand that the argument type implements a certain interface. Example 4-5 shows the syntax.
+
+#!csharp
+
+// Example 4-5. Using a type constraint
+
+using System;
+using System.Collections.Generic;
+
+public class GenericComparer<T> : IComparer<T>
+    where T : IComparable<T>
+{
+    public int Compare(T x, T y)
+    {
+        return x.CompareTo(y);
+    }
+}
+
+#!markdown
+
+# Reference Type Constraints
+
+You can constrain a type argument to be a reference type. As Example 4-9 shows, this looks similar to a type constraint. You just put the keyword class instead of a type name. If you are using C# 8.0, and are in an enabled nullable annotation context, the meaning of this annotation changes: it requires the type argument to be a non-nullable reference type. If you specify class?, that allows the type argument to be either a nullable or a non-nullable reference type.
+
+This constraint prevents the use of value types such as int, double, or any struct as the type argument.
+
+#!csharp
+
+// Example 4-9. Constraint requiring a reference type
+
+public class Bar<T>
+    where T : class
+{}
+
+#!markdown
+
+# Value Type Constraints
+
+Just as you can constrain a type argument to be a reference type, you can also constrain it to be a value type. As shown in Example 4-11, the syntax is similar to that for a reference type constraint, but with the struct keyword.
+
+#!csharp
+
+public class Quux<T>
+    where T : struct
+{}
+
+#!markdown
+
+# Value Types All the Way Down with Unmanaged Constraints
+
+You can specify unmanaged as a constraint, which requires that the type argument be a value type, but also that it contains no references. Not only does this mean that all of the type’s fields must be value types, but the type of each field must in turn contain only fields that are value types, and so on all the way down.
+
+In practice this means that all the actual data needs to be either one of a fixed set of built-in types (essentially, all the numeric types, bool, or a pointer) or an enum type. This is mainly of interest in interop scenarios, because types that match the unmanaged constraint can be passed safely and efficiently to unmanaged code.
+
+#!markdown
+
+# Not Null Constraints
+
+C# 8.0 introduces a new constraint type, notnull, which is available if you use the new nullable references feature. If you specify this, then either value types or non-nullable reference types are allowed.
+
+#!markdown
+
+# Other Special Type Constraints
+
+All delegate types derive from System.Delegate, and all enumeration types derive from System.Enum. As Example 4-12 shows, you can just write a type constraint requiring a type argument to derive from either of these.
+
+#!csharp
+
+public class RequireDelegate<T>
+    where T : Delegate
+{
+}
+
+public class RequireEnum<T>
+    where T : Enum
+{
+}
+
+#!markdown
+
+# Multiple Constraints
+
+If you’d like to impose multiple constraints for a single type argument, you can just put them in a list, as Example 4-13 shows. There are a couple of ordering restrictions:
+- if you have a reference or value type constraint, the class or struct keyword must come first in the list
+- if the new() constraint is present, it must be last.
+
+#!csharp
+
+public class Spong<T>
+    where T : IEnumerable<T>, IDisposable, new()
+{
+}

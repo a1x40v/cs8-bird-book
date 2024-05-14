@@ -1,0 +1,87 @@
+#!meta
+
+{"kernelInfo":{"defaultKernelName":"csharp","items":[{"aliases":[],"languageName":"csharp","name":"csharp"}]}}
+
+#!markdown
+
+**IEnumerable<T>** is the most general of collection interfaces, because it demands the least from its implementers.
+
+#!csharp
+
+// Example 5-21. IEnumerable<T> and IEnumerable
+
+public interface IEnumerable<out T> : IEnumerable
+{
+    IEnumerator<T> GetEnumerator();
+}
+
+public interface IEnumerable
+{
+    IEnumerator GetEnumerator();
+}
+
+// Example 5-22. IEnumerator<T> and IEnumerator
+
+public interface IEnumerator<out T> : IDisposable, IEnumerator
+{
+    T Current { get; }
+}
+
+public interface IEnumerator
+{
+    bool MoveNext();
+    object Current { get; }
+    void Reset();
+}
+
+#!markdown
+
+IEnumerable<T> is at the heart of LINQ to Objects. LINQ operators are available on any object that implements this interface.
+
+Although IEnumerable<T> is important and widely used, it’s pretty restrictive. You can ask it only for one item after another, and it will hand them out in whatever order it sees fit. It does not provide a way to modify the collection, or even of finding out how many items the collection contains without having to iterate through the whole lot. For these jobs, we have **ICollection<T>**
+
+#!csharp
+
+// Example 5-24. ICollection<T>
+
+public interface ICollection<T> : IEnumerable<T>, IEnumerable
+{
+    void Add(T item);
+    void Clear();
+    bool Contains(T item);
+    void CopyTo(T[] array, int arrayIndex);
+    bool Remove(T item);
+    int Count { get; }
+    bool IsReadOnly { get; }
+}
+
+#!markdown
+
+The third interface for sequential collections is **IList<T>**, and all types that implement this are required to implement ICollection<T>, and therefore also IEnumera
+ble<T>. As you’d expect, List<T> implements IList<T>. Arrays implement it too, using their element type as the argument for T. Example 5-25 shows how the interface
+looks.
+
+#!csharp
+
+// Example 5-25. IList<T>
+
+public interface IList<T> : ICollection<T>, IEnumerable<T>, IEnumerable
+{
+    int IndexOf(T item);
+    void Insert(int index, T item);
+    void RemoveAt(int index);
+    T this[int index] { get; set; }
+}
+
+#!markdown
+
+So you might be wondering how arrays can implement these interfaces, given that all arrays are fixed-size.
+
+Arrays mitigate this problem by using explicit interface implementation to hide the IList<T> methods that can change a list’s length, discouraging you from trying to use them. However, you can store a reference to an array in a variable of type IList<T>, making those methods visible
+
+#!csharp
+
+// Example 5-26. Trying (and failing) to enlarge an array
+
+IList<int> array = new[] { 1, 2, 3 };
+array.Add(4); // Will throw an exception

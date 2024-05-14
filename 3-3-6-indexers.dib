@@ -1,0 +1,27 @@
+#!meta
+
+{"kernelInfo":{"defaultKernelName":"csharp","items":[{"aliases":[],"languageName":"csharp","name":"csharp"}]}}
+
+#!csharp
+
+var numbers = new List<int> { 1, 2, 1, 4 };
+numbers[2] += numbers[1];
+Console.WriteLine(numbers[0]);
+
+#!markdown
+
+From the CLR’s point of view, an indexer is a property much like any other, except that it has been designated as the default property. If a class designates a property as being the default one, and if the property accepts at least one argument, C# will let you use that property through the indexer syntax.
+
+#!markdown
+
+Example shows a read-only indexer. You could add a set accessor to make it read/write, just like with any other property
+
+#!csharp
+
+public class Indexed
+{
+    public string this[int index]
+    {
+        get => index < 5 ? "Foo" : "bar";
+    }
+}

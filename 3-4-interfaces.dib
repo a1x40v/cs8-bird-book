@@ -1,0 +1,16 @@
+#!meta
+
+{"kernelInfo":{"defaultKernelName":"csharp","items":[{"aliases":[],"languageName":"csharp","name":"csharp"}]}}
+
+#!markdown
+
+A new feature in C# 8.0 called default interface implementation allows you to include some implementation details in an interface definition.
+If a class chooses to implement INamed, it will only be required to provide an implementation for this interface’s Id property. It can also supply a Name property if it wants to, but this is not required. If the class does not define its own Name, the definition from the interface will be used instead.
+
+#!csharp
+
+public interface INamed
+{
+    int Id { get; }
+    string Name => $"{this.GetType()}: {this.Id}";
+}

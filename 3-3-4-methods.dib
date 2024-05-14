@@ -1,0 +1,101 @@
+#!meta
+
+{"kernelInfo":{"defaultKernelName":"csharp","items":[{"aliases":[],"languageName":"csharp","name":"csharp"}]}}
+
+#!csharp
+
+public class Ex1
+{
+    public static int Divide(int x, int y, out int remainder)
+    {
+        remainder = x % y;
+        return x / y;
+    }
+}
+
+// This introduces a new variable and initializes it with the value that the method returns through this out parameter
+int q = Ex1.Divide(10, 3, out int r);
+
+Console.WriteLine($"q = {q}, r = {r}");
+
+// int q = Divide(10, 3, out _);
+
+#!markdown
+
+A variable declared in an out argument follows the usual scoping rules, so r will remain in scope for as long as q. Less obviously, r is available in
+the rest of the expression.
+
+#!csharp
+
+string text = "10";
+int value = int.TryParse(text, out int x) ? x : 0;
+Console.WriteLine($"{value}");
+
+#!markdown
+
+There’s a related keyword, ref, that has similar reference semantics, but allows information to flow bidirectionally. The caller is obliged to ensure that variables passed with ref contain a value before making the call, so in this case, the method is not required to set it before returning.
+
+#!markdown
+
+There’s a third way to add a level of indirection to an argument: you can apply the in keyword. (This was new in C# 7.2.) Whereas out only enables information to flow out of the method, in only allows it to flow in. It’s like a ref argument, but where the called method is not allowed to modify the variable the argument refers to.
+
+#!csharp
+
+public readonly struct Rect
+{
+    public Rect(double x, double y, double width, double height)
+    {
+        X = x;
+        Y = y;
+        Width = width;
+        Height = height;
+    }
+
+    public double X { get; }
+    public double Y { get; }
+    public double Width { get; }
+    public double Height { get; }
+}
+
+public class Ex1
+{
+    public static double GetArea(in Rect r) => r.Width * r.Height;
+}
+
+var r = new Rect(10, 20, 100, 100);
+double area = Ex1.GetArea(in r);
+double area2 = Ex1.GetArea(r); // the compiler just passes the argument by reference anyway
+
+#!markdown
+
+You can use the out and ref keywords with reference types too.
+
+#!csharp
+
+public class Foo
+{
+    public string Value {get;set;} 
+
+    public Foo(string value)
+    {
+        Value = value;
+    }
+}
+
+public class Ex2
+{
+    public static void Replace(ref Foo foo)
+    {
+        foo = new Foo("new string");
+    }
+}
+
+var foo = new Foo("string");
+var oldRef = foo;
+
+Console.WriteLine($"foo -- value: {foo.Value}");
+
+Ex2.Replace(ref foo);
+
+Console.WriteLine($"foo -- value: {foo.Value}");
+Console.WriteLine($"oldRef -- value: {oldRef.Value}");
