@@ -4,6 +4,48 @@
 
 #!markdown
 
+# Explicit implementation of an interface member
+
+Sometimes you may want to avoid defining each of that interface’s methods as a public member of a class.
+
+Occasionally, some API may require you to implement an interface that you feel pollutes the purity of your class’s API.
+
+Or, more prosaically, you may already have defined a member with the same name and signature as a member required by the interface, but that does something different from what the interface requires.
+
+Or worse, you may need to implement two different interfaces, both of which define members that have the same name and signature but require different behavior.
+
+You can solve any of these problems with a technique called explicit implementation to define members that implement a member of a specific interface without being public.
+
+When a type uses explicit interface implementation, those members cannot be used through a reference of the type itself. They become visible only when referring to an
+object through an expression of the interface’s type.
+
+#!csharp
+
+public interface IDoStuff
+{
+    string Name { get; set; }
+    int SomeMethod(string arg);
+}
+
+public class DoStuff : IDoStuff
+{
+    public string Name { get; set; }
+
+    // explicit implementation of method
+    int IDoStuff.SomeMethod(string arg)
+    {
+        return 0;
+    }
+}
+
+var ds = new DoStuff();
+// ds.SomeMethod("arg"); // method is hidden
+
+IDoStuff dsInterface = ds;
+dsInterface.SomeMethod("arg");
+
+#!markdown
+
 A new feature in C# 8.0 called default interface implementation allows you to include some implementation details in an interface definition.
 If a class chooses to implement INamed, it will only be required to provide an implementation for this interface’s Id property. It can also supply a Name property if it wants to, but this is not required. If the class does not define its own Name, the definition from the interface will be used instead.
 
