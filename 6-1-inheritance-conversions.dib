@@ -1,0 +1,59 @@
+#!meta
+
+{"kernelInfo":{"defaultKernelName":"csharp","items":[{"aliases":[],"languageName":"csharp","name":"csharp"}]}}
+
+#!markdown
+
+You will sometimes want to attempt to convert a reference from a base type to a derived type, an operation sometimes referred to as a **downcast**. C# offers four ways to do this.
+
+#!csharp
+
+public class Base {}
+
+public class Derived : Base {}
+
+#!markdown
+
+1. We can attempt a downcast using the cast syntax. This is the same syntax we use for performing nonimplicit numeric conversions, as Example 6-3 shows.
+
+This conversion is not guaranteed to succeed—that’s why we can’t use an implicit conversion. If you try this when the baseArg argument refers to something that’s neither an instance of Derived, nor something derived from Derived, the conversion will fail, throwing an InvalidCastException.
+
+#!csharp
+
+// Example 6-3. Feeling downcast
+
+public static void UseAsDerived(Base baseArg)
+{
+    var d = (Derived) baseArg;
+    // ... go on to do something with d
+}
+
+#!markdown
+
+2. Sometimes, you will not know for certain whether an object has a particular type. In this case, you can use the **as operator** instead, as shown in Example 6-4. This allows you to attempt a conversion without risking an exception. If the conversion fails, this operator just returns null.
+
+#!csharp
+
+// Example 6-4. The as operator
+
+public static void MightUseAsDerived(Base b)
+{
+    var d = b as Derived;
+    
+    if (d != null)
+    {
+        // ... go on to do something with d
+    }
+}
+
+#!csharp
+
+// Example 6-5. Type pattern
+
+public static void MightUseAsDerived(Base b)
+{
+    if (b is Derived d)
+    {
+        // ... go on to do something with d
+    }
+}

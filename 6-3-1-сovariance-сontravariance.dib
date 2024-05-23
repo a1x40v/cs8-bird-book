@@ -1,0 +1,69 @@
+#!meta
+
+{"kernelInfo":{"defaultKernelName":"csharp","items":[{"aliases":[],"languageName":"csharp","name":"csharp"}]}}
+
+#!markdown
+
+Covariance and contravariance are applicable only to the generic type arguments of interfaces and delegates. (Delegates are described in Chapter 9.) You cannot define a covariant or contravariant class or struct.
+
+#!csharp
+
+public class Base {}
+
+public class Derived : Base {}
+
+public class MoreDerived : Derived {}
+
+#!markdown
+
+We already know that as well as accepting a reference to any Base, this can also accept a reference to an instance of any type derived from Base, such as Derived.
+
+#!csharp
+
+// Example 6-12. A method accepting any IEnumerable<Base>
+
+public static void AllYourBase(IEnumerable<Base> bases) {}
+
+#!csharp
+
+// Example 6-13. Passing an IEnumerable<T> of a derived type
+
+IEnumerable<Derived> derivedItems = new Derived[] { new Derived(), new Derived() };
+AllYourBase(derivedItems);
+
+#!markdown
+
+This requires an object that implements the IEnumerable< T > generic interface, where T is Base. What would you expect to happen if we attempted to pass an object that did not implement IEnumerable< Base >, but did implement IEnumerable< Derived >? Example 6-13 does this, and it compiles just fine.
+
+#!csharp
+
+// Example 6-14. A method accepting any ICollection<Base>
+
+public static void AddBase(ICollection<Base> bases)
+{
+    bases.Add(new Base());
+}
+
+#!markdown
+
+ICollection< T > derives from IEnumerable< T >, and it adds the ability to modify the collection in certain ways. This particular method exploits that by adding a new Base object to the collection. That would mean trouble for the code in Example 6-15.
+
+#!csharp
+
+// Example 6-15. Error: trying to pass an ICollection<T> with a derived type
+
+ICollection<Derived> derivedList = new List<Derived>();
+AddBase(derivedList); // Will not compile
+
+#!markdown
+
+Code that uses the derivedList variable will expect every object in that list to be of type Derived (or something derived from it, such as the MoreDerived class). But the AddBase method in Example 6-14 attempts to add a plain Base instance. That cannot be correct, and the compiler does not allow it.
+
+How does the compiler know that it’s not OK to do this, while the very similar-looking conversion from IEnumerable< Derived > to IEnumerable< Base > is allowed?
+
+It’s not because Example 6-14 contains code that would cause a problem, by the way. You’d get the same compiler error even if the AddBase method were completely
+empty.
+
+The reason we don’t get an error in Example 6-13 is that the **IEnumerable<T> interface declares its type argument T as covariant**.
+
+public interface IEnumerable< out T > : IEnumerable
